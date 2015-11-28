@@ -32,14 +32,14 @@ import theano.tensor as T
 from theano.tensor.signal import downsample
 from theano.tensor.nnet import conv
 from PIL import Image
-train_ori_pixels = [[],[],[]]
+train_ori_pixels = []
 train_lab_pixels = []
-test_ori_pixels=[[],[],[]]
+test_ori_pixels=[]
 test_lab_pixels =[]
-valid_ori_pixels=[[],[],[]]
+valid_ori_pixels=[]
 valid_lab_pixels=[]
 count =0
-IMAGES=15
+IMAGE=15
 ##############################################################################################################
 ###################################Getting the data###########################################################
 def get_data():
@@ -50,109 +50,76 @@ def get_data():
 	global valid_ori_pixels
 	global valid_lab_pixels
 	global count
-	global IMAGES
-	'''
-	for filename in glob.glob('/home/kedar/ccn/ml_task/left/*.jpg'):
-		im_spec = []
-		im_1 = Image.open(filename)
-		pixel= list(im_1.getdata())
-		count = count +1
-		for i in range(len(pixel)):
-			rgb_list=[]
-			for j in range(2):
-				rgb_list.append(pixel[i][j])
-			im_spec=im_spec+rgb_list
-		if(count>3):
-			test_ori_pixels.append(im_spec)
-			valid_ori_pixels.append(im_spec)
-		train_ori_pixels.append(im_spec)
-		if(count>5):
-			break
-		
-	count=0
-	for filename in glob.glob('/home/kedar/ccn/ml_task/labeled/*.png'):
-		count=count+1
-		im_2 = Image.open(filename)
-		pixel= list(im_2.getdata())
-		train_lab_pixels=train_lab_pixels+pixel
-		if(count>3):
-			test_lab_pixels=test_lab_pixels+pixel
-			valid_lab_pixels=valid_lab_pixels+pixel
-		if(count>5):
-			break
-	'''
+	global IMAGE
 #######################################################################################
-	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/left/Training/*.jpg'):
+	for filename in glob.glob('/home/tinker/ml_task/left/Training/*.jpg'):
 		img=Image.open(filename)
 		img=numpy.asarray(img,dtype='float64')/256
 		img=img.transpose(2,0,1)
+		#print len(img[0])
 		verti=[]
+		train=[[],[],[]]
 		count=count+1
-		for a in img:
+		for a in range(len(img)):
 			for i in img[a]:
-				verti.append(i)
-			train_ori_pixels[a].append(verti)
-			verti=[]
+				train[a].append(i)
+		train=numpy.asarray(train,dtype='float64')
+		train=train.transpose(1,2,0)
+		train_ori_pixels.append(train)
 		if(count>IMAGE):
 			break
 	count=0
-	train_ori_pixels=numpy.asarray(train_ori_pixels,dtype='float64')
-	train_ori_pixels=train_ori_pixels.transpose(1,2,0)
+	print len(train_ori_pixels)
+	print len(train_ori_pixels[0])
 	###########################Test and validate#############################Ori
-	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/left/Testing/*.jpg'):
+	for filename in glob.glob('/home/tinker/ml_task/left/Testing/*.jpg'):
 		img=Image.open(filename)
 		img=numpy.asarray(img,dtype='float64')/256
 		img=img.transpose(2,0,1)
 		verti=[]
+		test=[[],[],[]]
+		valid=[[],[],[]]
 		count=count+1
-		for a in img:
+		for a in range(len(img)):
 			for i in img[a]:
-				verti.append(i)
-			test_ori_pixels[a].append(verti)
-			valid_ori_pixels[a].append(verti)
-			verti=[]
+				test[a].append(i)
+				valid[a].append(i)
+		test=numpy.asarray(test,dtype='float64')
+		test=test.transpose(1,2,0)
+		test_ori_pixels.append(test)
+		valid=numpy.asarray(valid,dtype='float64')
+		valid=valid.transpose(1,2,0)
+		valid_ori_pixels.append(valid)
+
 		if(count>IMAGE):
 			break
 	count=0
-	train_ori_pixels=numpy.asarray(train_ori_pixels,dtype='float64')
-	train_ori_pixels=train_ori_pixels.transpose(1,2,0)
-
+	#############################################################################
+	for filename in glob.glob('/home/tinker/ml_task/labeled/Training/*.png'):
+		img=Image.open(filename)
+		img=numpy.asarray(img,dtype='float64')/256
+		verti=[]
+		count=count+1
+		for a in img:
+			train_lab_pixels.append(a)				
+		if(count>IMAGE):
+			break
+	count=0
+	###############################################################################
+	for filename in glob.glob('/home/tinker/ml_task/labeled/Testing/*.png'):
+		img=Image.open(filename)
+		img=numpy.asarray(img,dtype='float64')/256
+		verti=[]
+		count=count+1
+		for a in img:
+			test_lab_pixels.append(a)
+			valid_lab_pixels.append(a)
+		if(count>IMAGE):
+			break
+	count=0
+	##############################################################################
 	print len(train_lab_pixels)
 	print len(train_ori_pixels)
-#######################################################################################
-	'''
-	for filename in glob.glob('/home/kedar/ccn/ml_task/left/*.jpg'):
-		img=Image.open(filename)
-		img=numpy.asarray(img,dtype='float64')/256
-		#img=img.transpose(2,0,1)
-		count=count+1
-		for i in range(len(img)):
-			for j in range(len(img[i])):
-				train_ori_pixels.append(img[i][j])
-				if(count>3):
-					test_ori_pixels.append(img[i][j])
-					valid_ori_pixels.append(img[i][j])
-		if(count>5):
-			break
-	count=0
-	for filename in glob.glob('/home/kedar/ccn/ml_task/labeled/*.png'):
-		img=Image.open(filename)
-		img=numpy.asarray(img,dtype='float64')
-		count=count+1
-		for i in range(len(img)):
-			for j in range(len(img[i])):
-				train_lab_pixels.append(img[i][j])
-				if(count>3):
-					test_lab_pixels.append(img[i][j])
-					valid_lab_pixels.append(img[i][j])
-		if(count>5):
-			break
-
-	'''						
-	'''
-	test_pixels=[(ori_pixels,lab_pixels)]
-	valid_pixels=[(ori_pixels,lab_pixels)]
-	'''
 ##############################################################################################################
 ###################################Hidden Layer###############################################################
 class HiddenLayer(object):
@@ -649,7 +616,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,dataset='mnist.pkl.gz',nkern
 	# classify the values of the fully-connected sigmoidal layer
 	# Similarly the n_in value must be equal to (batch_size*640) = number of labels##TODO##
 	# n_out here remains the same as given 
-	layer8 = LogisticRegression(input=layer7.output, n_in=5, n_out=(512*640))
+	layer8 = LogisticRegression(input=layer7.output, n_in=5, n_out=(10))
 
 	# the cost we minimize during training is the NLL of the model
 	cost = layer8.negative_log_likelihood(y)
