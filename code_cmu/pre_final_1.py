@@ -32,6 +32,8 @@ import theano.tensor as T
 from theano.tensor.signal import downsample
 from theano.tensor.nnet import conv
 from PIL import Image
+import statistics
+
 train_ori_pixels = []
 train_lab_pixels = []
 test_ori_pixels=[]
@@ -40,8 +42,10 @@ valid_ori_pixels=[]
 valid_lab_pixels=[]
 count =0
 IMAGE=10
+iterator_x=[8*i for i in range(65)]
+iterator_y=[8*i for i in range(81)]
 ##############################################################################################################
-###################################Getting the data###########################################################
+###################################Getting the data############################################################
 def get_data():
 	global train_ori_pixels
 	global train_lab_pixels
@@ -51,7 +55,74 @@ def get_data():
 	global valid_lab_pixels
 	global count
 	global IMAGE
-#######################################################################################
+	global iterator_x
+	global iterator_y
+	##############################################################################################################
+	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/labeled/Training/*.png'):
+		img=Image.open(filename)
+		img=numpy.asarray(img,dtype='float64')
+		verti=[]
+		total=[]
+		total_image=[]
+		for i in iterator_x:
+			for j in iterator_y:
+				verti=[]
+				for k in range(8):
+					for l in range(8):
+						if(not(i+k>511) and not(j+l>639)):
+							verti.append(img[i+k][j+l])
+						else:
+							verti=[]
+				#verti=whiten(verti)[0]
+				if(not len(verti)==0):
+					if(int(statistics.mean(verti))==0.0):
+						total_image.append(0.0)
+					else:
+						if(int(statistics.mean(verti))>9.0):
+							total_image.append(9.0)
+						else:
+							total_image.append(int(statistics.mean(verti)))
+		count=count+1
+		#total_image=whiten(total_image)[0]
+		for i in total_image:
+			train_lab_pixels.append(i)
+		if(count>IMAGE):
+			break
+	count=0
+	#######################################################################################
+	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/labeled/Testing/*.png'):
+		img=Image.open(filename)
+		img=numpy.asarray(img,dtype='float64')
+		verti=[]
+		total=[]
+		total_image=[]
+		for i in iterator_x:
+			for j in iterator_y:
+				verti=[]
+				for k in range(8):
+					for l in range(8):
+						if(not(i+k>510) and not(j+l>635)):
+							verti.append(img[i+k][j+l])
+						else:
+							verti=[]
+				#verti=whiten(verti)[0]
+				if(not len(verti)==0):
+					if(int(statistics.mean(verti))==0.0):
+						total_image.append(0.0)
+					else:
+						if(int(statistics.mean(verti))>9.0):
+							total_image.append(9.0)
+						else:
+							total_image.append(int(statistics.mean(verti)))
+		count=count+1
+		#total_image=whiten(total_image)[0]
+		for i in total_image:
+			test_lab_pixels.append(i)
+			valid_lab_pixels.append(i)
+		if(count>IMAGE):
+			break
+	count=0
+	#######################################################################################
 	train=[[],[],[]]
 	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/left/Training/*.jpg'):
 		img=Image.open(filename)
@@ -72,6 +143,7 @@ def get_data():
 	count=0
 	print len(train_ori_pixels)
 	print len(train_ori_pixels[0])
+	print len(train_ori_pixels[0][0])
 	###########################Test and validate#############################Ori
 	test=[[],[],[]]
 	valid=[[],[],[]]
@@ -96,6 +168,7 @@ def get_data():
 		valid_ori_pixels.append(i)
 	count=0
 	#############################################################################
+	'''
 	train_lab=[]
 	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/labeled/Training/*.png'):
 		img=Image.open(filename)
@@ -104,10 +177,10 @@ def get_data():
 		count=count+1
 		for a in img:
 			for b in a:
-				train_lab.append(b)
+				train_lab_pixels.append(b)
 		if(count>IMAGE):
 			break
-		train_lab_pixels.append(train_lab)
+		#train_lab_pixels.append(train_lab)
 		train_lab=[]
 	count=0
 	###############################################################################
@@ -119,15 +192,17 @@ def get_data():
 		count=count+1
 		for a in img:
 			for b in a:
-				test_lab.append(b)
+				test_lab_pixels.append(b)
+				valid_lab_pixels.append(b)
 		if(count>IMAGE):
 			break
-		test_lab_pixels.append(test_lab)
-		valid_lab_pixels.append(test_lab)
-		test_lab=[]
+		#test_lab_pixels.append(test_lab)
+		#valid_lab_pixels.append(test_lab)
+		#test_lab=[]
 	count=0
+	'''
 	##############################################################################
-	print len(train_ori_pixels)
+	print "Labels", len(train_lab_pixels)
 	train_lab_pixels=theano.shared(numpy.asarray(train_lab_pixels,dtype=theano.config.floatX))
 	train_lab_pixels=T.cast(train_lab_pixels,'int32')
 	test_lab_pixels=theano.shared(numpy.asarray(test_lab_pixels,dtype=theano.config.floatX))
@@ -492,7 +567,7 @@ class LeNetConvPoolLayer(object):
         self.input = input
 
 
-def evaluate_lenet5(learning_rate=0.1, n_epochs=200,dataset='mnist.pkl.gz',nkerns=[20, 50], batch_size=512):
+def evaluate_lenet5(learning_rate=0.1, n_epochs=200,dataset='mnist.pkl.gz',nkerns=[20, 50], batch_size=2):
 
 	rng = numpy.random.RandomState(23455)
 	'''
@@ -530,7 +605,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,dataset='mnist.pkl.gz',nkern
 	index = T.lscalar()  # index to a [mini]batch
 
 	# start-snippet-1
-	x = T.tensor4(name='x')   # the data is presented as rasterized images
+	x = T.tensor3(name='x')   # the data is presented as rasterized images
 	y = T.ivector('y')  # the labels are presented as 1D vector of######################TODO###################
 						# [int] labels
 	print "train_batches", n_train_batches
@@ -564,7 +639,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,dataset='mnist.pkl.gz',nkern
 	layer1 = LeNetConvPoolLayer(
 		rng,
 		input=layer0.output,
-		image_shape=(batch_size, nkerns[0], 254,318),
+		image_shape=(batch_size*512, nkerns[0], 254,318),
 		filter_shape=(nkerns[1], nkerns[0], 3, 3),
 		poolsize=(2, 2)
 	)
@@ -623,14 +698,14 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,dataset='mnist.pkl.gz',nkern
 		rng,
 		input=layer7_input,
 		n_in=nkerns[1] * 1 * 2,
-		n_out=512,
+		n_out=batch_size*5120,
 		activation=T.tanh
 	)
 
 	# classify the values of the fully-connected sigmoidal layer
 	# Similarly the n_in value must be equal to (batch_size*640) = number of labels##TODO##
-	# n_out here remains the same as given 
-	layer8 = LogisticRegression(input=layer7.output, n_in=512, n_out=512*640)
+	# n_out here remains the same as given
+	layer8 = LogisticRegression(input=layer7.output, n_in=batch_size*5120, n_out=5120*batch_size)
 
 	# the cost we minimize during training is the NLL of the model
 	cost = layer8.negative_log_likelihood(y)
@@ -640,8 +715,8 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,dataset='mnist.pkl.gz',nkern
 		[index],
 		layer8.errors(y),
 		givens={
-			x: test_set_x[(index)*batch_size:(index+1)*batch_size],
-			y: test_set_y[index *batch_size: (index + 1) *batch_size]
+			x: test_set_x[(index)*batch_size*512:(index+1)*batch_size*512],
+			y: test_set_y[index *5120*batch_size: (index + 1) *5120*batch_size]
 		}
 	)
 
@@ -649,8 +724,8 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,dataset='mnist.pkl.gz',nkern
 		[index],
 		layer8.errors(y),
 		givens={
-			x: valid_set_x[index*batch_size: (index + 1)*batch_size],
-			y: valid_set_y[index*batch_size: (index + 1) *batch_size]
+			x: valid_set_x[index*batch_size*512: (index + 1)*batch_size*512],
+			y: valid_set_y[index*batch_size*5120: (index + 1) *batch_size*5120]
 		}
 	)
 
@@ -675,8 +750,8 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,dataset='mnist.pkl.gz',nkern
 		cost,
 		updates=updates,
 		givens={
-			x: train_set_x[index*batch_size: (index + 1)*batch_size],
-			y: train_set_y[index*batch_size: (index + 1)*batch_size]
+			x: train_set_x[index*batch_size*512: (index + 1)*batch_size*512],
+			y: train_set_y[index*batch_size*5120: (index + 1)*batch_size*5120]
 		}
 	)
 	# end-snippet-1

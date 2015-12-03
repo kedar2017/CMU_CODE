@@ -57,7 +57,7 @@ def get_data():
 	iterator_y=[5*i for i in range(125)]
 	count=0
 	#########################Training data##############################Ori
-	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/left/Testing/*.jpg'):
+	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/left/Training/*.jpg'):
 		img=Image.open(filename)
 		img=numpy.asarray(img,dtype='float64')/256
 		img=img.transpose(2,0,1)
@@ -70,7 +70,7 @@ def get_data():
 					for k in range(8):
 						for l in range(8):
 							if(not(i+k>510) and not(j+l>635)):
-								verti.append(img[a][i+k][j+l])
+								verti.append(10*img[a][i+k][j+l])
 							else:
 								verti=[]
 					if(not len(verti)==0):
@@ -88,7 +88,7 @@ def get_data():
 	train_ori_pixels=numpy.asarray(train_ori_pixels,dtype='float64')
 	train_ori_pixels=train_ori_pixels.transpose(1,2,0)
 	###########################Test and validate#############################Ori
-	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/left/Testing/*.jpg'):
+	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/left/Training/*.jpg'):
 		img=Image.open(filename)
 		img=numpy.asarray(img,dtype='float64')/256
 		img=img.transpose(2,0,1)
@@ -101,7 +101,7 @@ def get_data():
 					for k in range(8):
 						for l in range(8):
 							if(not(i+k>510) and not(j+l>635)):
-								verti.append(img[a][i+k][j+l])
+								verti.append(10*img[a][i+k][j+l])
 							else:
 								verti=[]
 					if(not len(verti)==0):
@@ -124,7 +124,7 @@ def get_data():
 	count=0
 	#############################Training #################################Labels
 	print train_ori_pixels[1][0]
-	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/labeled/Testing/*.png'):
+	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/labeled/Training/*.png'):
 		img=Image.open(filename)
 		img=numpy.asarray(img,dtype='float64')
 		verti=[]
@@ -156,7 +156,7 @@ def get_data():
 			break
 	count=0
 	###############################Testing and validate##########################Labels
-	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/labeled/Testing/*.png'):
+	for filename in glob.glob('/home/kedar/CMU/ccn/ml_task/labeled/Training/*.png'):
 		img=Image.open(filename)
 		img=numpy.asarray(img,dtype='float64')
 		verti=[]
@@ -388,7 +388,7 @@ class LogisticRegression(object):
         if y.dtype.startswith('int'):
             # the T.neq operator returns a vector of 0s and 1s, where 1
             # represents a mistake in prediction
-            return [T.mean(T.neq(self.y_pred, y)),self.y_pred]
+            return [T.mean(T.neq(self.y_pred, y)),y]
         else:
             raise NotImplementedError()
 	def pred(self,y):
@@ -684,7 +684,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,dataset='mnist.pkl.gz',nkern
 		on_unused_input='ignore'
 	)
 	# create a list of all model parameters to be fit by gradient descent
-	params = layer3.params + layer2.params + layer0.params
+	params = layer3.params + layer2.params + layer0.params+layer1.params
 
 	# create a list of gradients for all model parameters
 	grads = T.grad(cost, params)
